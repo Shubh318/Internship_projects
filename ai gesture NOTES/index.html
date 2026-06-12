@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirWrite Notes - Futuristic Air-Gesture Notebook</title>
+  <!-- Google Fonts: Combined Outfit, JetBrains Mono, Caveat (Cursive), Patrick Hand (Handwriting), and Courier Prime (Typewriter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Courier+Prime:wght@400;700&family=Dancing+Script:wght@400..700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sacramento&family=Special+Elite&display=swap" rel="stylesheet">
+  
+  <!-- MediaPipe Local Assets (Ensures 100% offline & bypasses blocked CDNs) -->
+  <script src="./lib/mediapipe/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="./lib/mediapipe/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="./lib/mediapipe/hands.js" crossorigin="anonymous"></script>
+  
+  <!-- Style Sheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-background-glow"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-icon">✨</div>
+        <h1>AirWrite <span class="logo-accent">Notes</span></h1>
+      </div>
+      <p class="subtitle">Write in the air using gestures. No keyboard. No touch.</p>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-main-grid">
+      
+      <!-- Left Column: Camera and Gestures -->
+      <section class="workspace-left">
+        <!-- Live Camera & Canvas Card -->
+        <div class="card glass-card camera-card">
+          <div class="card-header">
+            <h3>📹 Motion Canvas</h3>
+            <span id="camera-badge" class="badge badge-error">Offline</span>
+          </div>
+          
+          <div class="camera-wrapper">
+            <!-- Camera View (will be mirrored in CSS) -->
+            <video id="webcam" width="640" height="480" autoplay playsinline></video>
+            
+            <!-- Canvas Overlay (mirrored horizontally to map screen coordinates) -->
+            <canvas id="canvas-overlay"></canvas>
+            
+            <!-- Tracking indicator overlay -->
+            <div id="gesture-overlay-icon" class="gesture-visualizer">👆</div>
+
+            <!-- Loading overlay -->
+            <div id="camera-loading" class="camera-loading-overlay">
+              <div class="spinner"></div>
+              <p>Initializing Hand Tracking...</p>
+            </div>
+          </div>
+
+          <div class="camera-actions">
+            <button id="btn-start" class="btn btn-primary">▶️ Start Camera</button>
+            <button id="btn-stop" class="btn btn-danger" disabled>⏹️ Stop Camera</button>
+          </div>
+        </div>
+
+        <!-- Gesture Guide Card -->
+        <div class="card glass-card guide-card">
+          <div class="card-header">
+            <h3>ℹ️ Interactive Gesture Guide</h3>
+          </div>
+          <div class="guide-grid">
+            <div class="guide-item" id="guide-write">
+              <div class="gesture-icon">☝️</div>
+              <div class="guide-info">
+                <h4>Index Finger Up</h4>
+                <p>Start drawing / writing path</p>
+              </div>
+            </div>
+            <div class="guide-item" id="guide-space">
+              <div class="gesture-icon">✊</div>
+              <div class="guide-info">
+                <h4>Fist Gesture</h4>
+                <p>Insert single space</p>
+              </div>
+            </div>
+            <div class="guide-item" id="guide-delete">
+              <div class="gesture-icon">✌️</div>
+              <div class="guide-info">
+                <h4>Two Fingers Up</h4>
+                <p>Delete / Undo last word</p>
+              </div>
+            </div>
+            <div class="guide-item" id="guide-pause">
+              <div class="gesture-icon">🖐️</div>
+              <div class="guide-info">
+                <h4>Open Palm</h4>
+                <p>Pause / Stop tracking mode</p>
+              </div>
+            </div>
+            <div class="guide-item" id="guide-font">
+              <div class="gesture-icon">🤟</div>
+              <div class="guide-info">
+                <h4>Three Fingers</h4>
+                <p>Cycle Font Style (10 styles)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Note Editor and Recognition Console -->
+      <section class="workspace-right">
+        <!-- Modern Digital Notebook -->
+        <div class="card glass-card notebook-card">
+          <div class="card-header">
+            <h3>📝 Smart Notebook</h3>
+            <div class="notebook-actions">
+              <button id="btn-undo" class="btn btn-secondary btn-sm" title="Undo Last Action">↩️ Undo</button>
+              <button id="btn-clear" class="btn btn-secondary btn-sm" title="Clear Notebook">🗑️ Clear All</button>
+              <button id="btn-export" class="btn btn-primary btn-sm" title="Export as TXT">💾 Export</button>
+            </div>
+          </div>
+
+          <div class="notebook-body">
+            <!-- Paper lined design -->
+            <div class="paper-texture">
+              <div class="paper-margin"></div>
+              <textarea id="note-editor" placeholder="Start your camera, hold up your index finger, and write in the air to take notes..."></textarea>
+            </div>
+          </div>
+
+          <div class="notebook-footer">
+            <div class="word-counter"><span id="char-count">0</span> chars | <span id="word-count">0</span> words | Font: <span id="active-font-name" style="font-weight: 700; color: var(--color-primary);">Modern Sans</span></div>
+            <div id="save-status" class="save-status">💾 Auto-saved</div>
+          </div>
+        </div>
+
+        <!-- Recognition Status and Suggestions -->
+        <div class="card glass-card info-card">
+          <div class="card-header">
+            <h3>⚙️ Intelligent Control Panel</h3>
+          </div>
+
+          <div class="control-panel-body">
+            <!-- Real-time Status Tracker -->
+            <div class="status-item">
+              <span class="status-label">Current State:</span>
+              <div class="status-indicator">
+                <span id="status-badge" class="badge badge-normal">Idle</span>
+                <span id="status-desc" class="desc-text">Camera not started</span>
+              </div>
+            </div>
+
+            <!-- Gesture / Coordinates -->
+            <div class="stats-row">
+              <div class="stat-box">
+                <div class="stat-title">Detected Gesture</div>
+                <div class="stat-value" id="stat-gesture">None</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-title">Confidence</div>
+                <div class="stat-value" id="stat-confidence">0%</div>
+              </div>
+            </div>
+
+            <!-- Suggestions Area -->
+            <div class="suggestions-container">
+              <div class="suggestions-header">
+                <span>💡 Word Alternatives</span>
+                <span class="suggest-tip">(Click any pill to correct)</span>
+              </div>
+              <div id="suggestions-list" class="suggestions-list">
+                <span class="no-suggestions">No suggestions available. Start writing to see alternatives.</span>
+              </div>
+            </div>
+            
+            <!-- Console Output Logger -->
+            <div class="console-logger">
+              <div class="console-header">
+                <span>System Console Log</span>
+                <button id="btn-clear-console" class="btn-icon">🚫</button>
+              </div>
+              <div id="console-output" class="console-output">
+                <div class="console-line system">[System] Welcome to AirWrite Notes v1.0.</div>
+                <div class="console-line info">[System] Grant camera access to initialize gesture tracking.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="recognizer.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
