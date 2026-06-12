@@ -1,0 +1,19 @@
+{
+  "name": "gesture-creature-world",
+  "version": "1.0.0",
+  "description": "Gesture Creature World - control animated creatures using hand gestures in the browser.",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "dev": "python -m http.server 8080"
+  },
+  "keywords": [
+    "mediapipe",
+    "hand-tracking",
+    "canvas-animation",
+    "creative-coding",
+    "gestures"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}

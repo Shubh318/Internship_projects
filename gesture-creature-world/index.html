@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture Creature World - Luminara</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOADING INDICATOR -->
+  <div id="loading-indicator">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text-element">Loading Magic Spheres...</div>
+  </div>
+
+  <!-- MAIN CANVAS -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HIDDEN WEBCAM VIDEO ELEMENT -->
+  <video id="webcam" autoplay playsinline muted class="hidden-element"></video>
+
+  <!-- MOUSE CONTROL NOTIFICATION BANNER -->
+  <div id="mouse-notification" class="mouse-notification">
+    <div class="pulse-dot-red"></div>
+    <span id="mouse-notification-text">Camera blocked. Fallback Mouse mode active.</span>
+  </div>
+
+  <!-- START / WELCOME SCREEN -->
+  <div id="start-screen" class="hidden">
+    <div class="logo-container">
+      <h1 class="logo-title">Luminara</h1>
+      <p class="logo-subtitle">Gesture Creature World</p>
+    </div>
+    
+    <div class="start-content-grid">
+      <div class="intro-panel glass-panel">
+        <h3>Discover the Forest</h3>
+        <p>Welcome, Spirit Guardian. You have discovered the hidden digital forest of <strong>Luminara</strong>.</p>
+        <p>In this world, elemental creatures are tied to your touch and movement. Guide them, heal them, and protect them from dark storms using your physical hands.</p>
+        <p><em>Use your camera to control creatures with real-time gestures, or click/drag as a fallback.</em></p>
+      </div>
+      
+      <div class="permission-box glass-panel">
+        <div class="camera-icon">🎥</div>
+        <h3>Webcam Activation</h3>
+        <p style="font-size: 0.9rem; color: var(--color-text-dim); text-align: center;">
+          This experience uses hand landmarks. Please allow camera permissions when prompted. Your camera stream is processed locally in the browser and never uploaded.
+        </p>
+        <button id="btn-request-camera" class="btn-primary">Awaken World</button>
+        <div id="fallback-link" class="fallback-link">Continue with Mouse Controls</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE SELECTION OVERLAY -->
+  <div id="mode-selection-overlay" class="hidden">
+    <h2 class="mode-overlay-title">Select Your Path</h2>
+    <div class="mode-cards-container">
+      <div class="mode-card glass-panel story" id="mode-story">
+        <div class="mode-card-icon">📖</div>
+        <h3>Story Mode</h3>
+        <p>Embark on a 10-stage magical journey. Awake the spirits, gather elementals, survive the dark storms, heal the wounded, and wake up the legendary Guardians.</p>
+      </div>
+      <div class="mode-card glass-panel freeplay" id="mode-freeplay">
+        <div class="mode-card-icon">🌌</div>
+        <h3>Free Play</h3>
+        <p>Enter the sandbox. Spawn elements, feed spirits, switch worlds, and interact with the wildlife of Luminara without restrictions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIALOG STORY OVERLAY -->
+  <div id="dialog-overlay" class="hidden">
+    <div class="dialog-box glass-panel">
+      <div class="dialog-stage-badge" id="dialog-badge">Stage 1</div>
+      <h3 class="dialog-title" id="dialog-title">Awakening the Forest</h3>
+      <div class="dialog-body" id="dialog-text">
+        The spirits of Luminara are deep in slumber. Wake them up by pointing at them with a single index finger.
+      </div>
+      <div class="dialog-goal-box">
+        <div class="dialog-goal-title">Objective</div>
+        <div class="dialog-goal-text" id="dialog-goal">Wake up 3 sleeping fireflies by pointing at them.</div>
+      </div>
+      <div class="dialog-footer">
+        <button id="btn-dialog-ok" class="btn-primary">Begin Quest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADS UP DISPLAY (HUD) -->
+  <div id="hud" class="hud-container">
+    
+    <!-- Top Bar -->
+    <div class="hud-top-bar">
+      <div class="hud-left">
+        <div class="world-badge glass-panel">
+          <div class="world-dot" id="world-dot"></div>
+          <span class="world-name" id="world-name">Luminara Forest</span>
+        </div>
+        <div class="mode-badge glass-panel" id="hud-mode-text">Story Mode</div>
+      </div>
+
+      <!-- Gesture Indicator (Top Center) -->
+      <div class="gesture-indicator glass-panel">
+        <div class="gesture-icon-box" id="gesture-icon">❓</div>
+        <div class="gesture-info">
+          <span class="gesture-label">Current Gesture</span>
+          <span class="gesture-name" id="gesture-name">None Detected</span>
+        </div>
+      </div>
+
+      <!-- Corner Mini Camera View -->
+      <div class="camera-preview-panel glass-panel">
+        <video id="webcam-preview" autoplay playsinline muted></video>
+        <canvas id="camera-overlay"></canvas>
+        <div class="tracking-status-indicator" id="tracking-status"></div>
+      </div>
+    </div>
+
+    <!-- Floating Utility Controls (Top Right) -->
+    <div class="utility-controls-box">
+      <button class="btn-secondary btn-icon" id="btn-mute" title="Toggle Sound">🔊</button>
+      <button class="btn-secondary btn-icon" id="btn-input-mode" title="Toggle Webcam/Mouse">🖱️</button>
+      <button class="btn-secondary btn-icon" id="btn-reset" title="Reset Sandbox/Stage">🔄</button>
+      <button class="btn-secondary btn-icon" id="btn-exit" title="Exit to Menu">🚪</button>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="hud-bottom-bar">
+      <!-- Gesture Guide (Bottom Left) -->
+      <div class="gesture-guide-panel glass-panel">
+        <h4 class="guide-title">Gesture Codex</h4>
+        <div class="guide-list">
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">☝️</span>
+            <span class="guide-gesture-desc">One Finger</span>
+            <span class="guide-gesture-action">Guide main creature</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">✋</span>
+            <span class="guide-gesture-desc">Open Palm</span>
+            <span class="guide-gesture-action">Attract all spirits</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">✊</span>
+            <span class="guide-gesture-desc">Closed Fist</span>
+            <span class="guide-gesture-action">Scatter / Shockwave</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">🤏</span>
+            <span class="guide-gesture-desc">Pinch</span>
+            <span class="guide-gesture-action">Grab and drag creature</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">✌️</span>
+            <span class="guide-gesture-desc">Two Fingers</span>
+            <span class="guide-gesture-action">Change selection</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">👍</span>
+            <span class="guide-gesture-desc">Thumb Up</span>
+            <span class="guide-gesture-action">Feed / Heal spirits</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">👎</span>
+            <span class="guide-gesture-desc">Thumb Down</span>
+            <span class="guide-gesture-action">Aggro / Sad mood</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">↔️</span>
+            <span class="guide-gesture-desc">Swipe L / R</span>
+            <span class="guide-gesture-action">Switch environments</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-gesture-emoji">↕️</span>
+            <span class="guide-gesture-desc">Hand Up/Down</span>
+            <span class="guide-gesture-action">Jump / Put to sleep</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story Quest Status (Bottom Center) -->
+      <div class="story-status-card glass-panel" id="story-status-panel">
+        <h4 class="story-stage-title" id="hud-story-stage">Stage 1: Awakening Forest</h4>
+        <p class="story-stage-desc" id="hud-story-desc">Use 1 finger to wake up sleeping spirits.</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="story-progress"></div>
+        </div>
+      </div>
+
+      <!-- Selected Creature Status (Bottom Right) -->
+      <div class="creature-card-panel glass-panel" id="creature-card">
+        <div class="creature-card-header">
+          <span class="creature-card-name" id="creature-name">Firefly Dragon</span>
+          <span class="creature-card-mood" id="creature-mood">Happy 😊</span>
+        </div>
+        <div class="creature-stat">
+          <span class="stat-label">Energy</span>
+          <div class="stat-value-bar-bg">
+            <div class="stat-value-bar-fill energy-bar-fill" id="creature-energy"></div>
+          </div>
+        </div>
+        <div class="creature-stat">
+          <span class="stat-label">Happiness</span>
+          <div class="stat-value-bar-bg">
+            <div class="stat-value-bar-fill happiness-bar-fill" id="creature-happiness"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
