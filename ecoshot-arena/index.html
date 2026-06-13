@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en" class="h-full select-none overflow-hidden bg-slate-950">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoShot Arena — Gesture Controlled Environmental Shooting Game</title>
+    
+    <!-- Google Fonts for premium display styling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;550;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Play CDN for immediate direct opening support -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Space Grotesk"', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+            },
+            colors: {
+              navy: {
+                DEFAULT: '#0a0f24',
+                light: '#131c3f',
+                dark: '#050714',
+                glass: 'rgba(10, 15, 36, 0.75)',
+              },
+              eco: {
+                green: '#2ecc71',
+                neon: '#10b981',
+                teal: '#14b8a6',
+                cyan: '#06b6d4',
+                warning: '#ef4444',
+                gold: '#f59e0b',
+              }
+            },
+            boxShadow: {
+              'neon-green': '0 0 15px rgba(16, 185, 129, 0.5)',
+              'neon-cyan': '0 0 15px rgba(6, 182, 212, 0.5)',
+              'neon-warning': '0 0 15px rgba(239, 68, 68, 0.5)',
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- MediaPipe CDNs for computer vision gesture tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body class="h-full bg-[#050714] text-white font-sans overflow-hidden antialiased">
+    <!-- Background Space Particles / Floating Elements (SVG Overlay) -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-30">
+      <div id="bg-glow" class="absolute w-[500px] h-[500px] rounded-full bg-emerald-900/10 blur-[130px] -top-40 -left-40"></div>
+      <div id="bg-glow-2" class="absolute w-[500px] h-[500px] rounded-full bg-cyan-950/20 blur-[130px] bottom-10 right-10"></div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="relative w-full h-full z-10 flex flex-col items-center justify-center p-4">
+      
+      <!-- Screen 1: Landing Screen -->
+      <div id="screen-landing" class="w-full max-w-4xl bg-navy-glass backdrop-blur-xl border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl flex flex-col items-center gap-6 justify-between transform transition-all duration-500 scale-100">
+        <div>
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/20 text-emerald-400 font-medium text-sm tracking-widest mb-4 uppercase animate-pulse">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0110 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"></path></svg>
+            Eco Defender Initiative
+          </div>
+          <h1 class="text-5xl md:text-7xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent tracking-tight leading-none mb-3 font-sans">
+            EcoShot Arena
+          </h1>
+          <p class="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto">
+            Shoot the garbage, save the planet.
+          </p>
+          <p class="text-sm md:text-base text-cyan-400/90 tracking-wide mt-1 uppercase font-mono">
+            Gesture Controlled Environmental Shooting Game
+          </p>
+        </div>
+
+        <div class="relative w-full max-w-lg p-6 rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded bg-slate-800 text-xs border border-slate-700 uppercase font-mono text-slate-400">
+            How to Control
+          </div>
+          <div class="flex flex-col sm:flex-row items-center justify-around gap-4 text-center mt-2">
+            <div class="flex flex-col items-center gap-1.5">
+              <span class="text-3xl">✊</span>
+              <p class="font-bold text-emerald-400 text-sm">Aim with Fist</p>
+              <p class="text-xs text-slate-400 max-w-[124px]">Fold fingers into a fist to control crosshair</p>
+            </div>
+            <div class="h-8 w-px bg-slate-800 hidden sm:block"></div>
+            <div class="flex flex-col items-center gap-1.5">
+              <span class="text-3xl">👍</span>
+              <p class="font-bold text-teal-400 text-sm">Thumbs Up</p>
+              <p class="text-xs text-slate-400 max-w-[124px]">Raise thumb high to continuously Fire!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full max-w-2xl justify-center mt-2">
+          <button id="btn-start-game" class="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 text-slate-950 font-black rounded-2xl text-xl hover:scale-105 active:scale-95 hover:shadow-emerald-500/40 hover:brightness-110 transition-all duration-300 shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 cursor-pointer select-none">
+            <svg class="w-6 h-6 fill-slate-950" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            START SIMULATION
+          </button>
+          
+          <button id="btn-view-guide" class="w-full sm:w-auto px-6 py-5 bg-slate-900 border border-slate-700 hover:bg-slate-800 hover:text-white hover:border-slate-600 rounded-2xl text-lg font-bold transition-all duration-300 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer select-none">
+            Gesture Guide
+          </button>
+        </div>
+
+        <!-- Dynamic Frame Notice -->
+        <div class="w-full max-w-xl px-4 py-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl text-center text-xs text-cyan-300/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1 shadow-inner">
+          <div class="flex items-center gap-2 text-left">
+            <span class="text-xl">🌐</span>
+            <p class="leading-relaxed">
+              If your web camera is blocked by the editor's iframe sandboxing, open the app directly.
+            </p>
+          </div>
+          <button id="btn-tab-launch" class="w-full sm:w-auto shrink-0 px-4 py-2 bg-gradient-to-r from-cyan-400 to-teal-400 hover:brightness-110 text-slate-950 font-bold rounded-lg transition-all shadow-md shadow-cyan-500/15 cursor-pointer">
+            Open in New Tab
+          </button>
+        </div>
+
+        <div class="flex items-center gap-8 text-sm text-slate-400 font-mono select-none mt-4 max-w-md w-full justify-around border-t border-slate-900 pt-4">
+          <div class="text-left">
+            <span class="text-slate-500 text-[10px] block">PERSONAL RECORD</span>
+            <span id="best-score" class="font-bold text-emerald-400">-</span> pts
+          </div>
+          <div class="text-center">
+            <span class="text-slate-500 text-[10px] block">BEST RANK</span>
+            <span id="best-rank" class="font-bold text-teal-400">-</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-500 text-[10px] block">TOTAL CLEANED</span>
+            <span id="total-cleaned" class="font-bold text-cyan-400">-</span> items
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-center justify-center w-full max-w-sm mt-1">
+          <button id="btn-fullscreen-landing" class="px-4 py-1.5 rounded-lg bg-slate-900/40 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-xs text-slate-400 tracking-wider flex items-center gap-1 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15"></path></svg>
+            Fullscreen LED Mode
+          </button>
+          
+          <button id="btn-calibrate-quick" class="px-3 py-1.5 rounded-lg bg-orange-950/20 border border-orange-900/40 hover:bg-orange-900/30 text-xs text-orange-400 tracking-wider flex items-center gap-1 transition-all">
+            ⚙️ Calibration
+          </button>
+        </div>
+      </div>
+
+      <!-- Screen 2: Gesture Guide Screen -->
+      <div id="screen-gesture-guide" class="w-full max-w-4xl bg-navy-glass backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 hidden">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            Eco Defender Guide
+          </h2>
+          <button id="btn-close-guide" class="px-4 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-900 text-sm transition-all">
+            Back to Home
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[60vh] pr-2">
+          <!-- Gesture Card 1 -->
+          <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex flex-col gap-3">
+            <div class="text-3xl">✊</div>
+            <div>
+              <p class="font-bold text-emerald-400 text-lg">1. Fist / Move Pointer</p>
+              <p class="text-sm text-slate-300 mt-1">Fold your fingers into a tight fist to move the crosshair / pointer in the air, similar to a trackpad cursor.</p>
+            </div>
+            <div class="mt-auto pt-2 border-t border-slate-800 flex justify-between text-xs font-mono text-slate-400">
+              <span>Folded Fingers (Fist)</span>
+              <span class="text-emerald-500">Crosshair Aim</span>
+            </div>
+          </div>
+
+          <!-- Gesture Card 2 -->
+          <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex flex-col gap-3">
+            <div class="text-3xl">👍</div>
+            <div>
+              <p class="font-bold text-teal-400 text-lg">2. Trigger Shoot</p>
+              <p class="text-sm text-slate-300 mt-1">Raise thumb upwards (Thumbs Up gesture) to instantly trigger the laser weapon. Fires smoothly at the aimed location!</p>
+            </div>
+            <div class="mt-auto pt-2 border-t border-slate-800 flex justify-between text-xs font-mono text-slate-400">
+              <span>Raise Thumb UP</span>
+              <span class="text-teal-500">Fire Weapon</span>
+            </div>
+          </div>
+
+          <!-- Gameplay tip Card -->
+          <div class="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 flex flex-col justify-center text-center md:col-span-2">
+            <p class="font-bold text-emerald-400 text-lg mb-1">💡 Pro Mall Tip</p>
+            <p class="text-sm text-emerald-100/90 leading-relaxed">
+              If camera lighting is poor or hand tracking gets lost, click the <b class="text-orange-300">Mouse Fallback Mode</b> button on the HUD. It lets you control with mice, laptops, or trackballs instantly during exhibitions!
+            </p>
+          </div>
+        </div>
+
+        <div class="text-center text-slate-400 text-xs mt-2 border-t border-slate-800 pt-4">
+          EcoShot Arena prioritizes real-time, low-latency detection for public exhibitions and screens.
+        </div>
+      </div>
+
+      <!-- Screen 3: Camera Setup Screen -->
+      <div id="screen-camera-setup" class="w-full max-w-4xl bg-navy-glass backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 hidden">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+            Webcam Calibration Setup
+          </h2>
+          <p class="text-slate-400 text-sm mt-1">Ensure your camera has permission and stand approximately 1.5 to 2 meters away.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-slate-900/30 p-4 rounded-2xl border border-slate-800">
+          
+          <!-- Webcam Canvas Preview Box -->
+          <div class="relative aspect-video rounded-xl bg-black border border-slate-800 flex items-center justify-center overflow-hidden">
+            <!-- Smooth raw video element -->
+            <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover scale-x-[-1] pointer-events-none"></video>
+            
+            <!-- Output visual overlay canvas -->
+            <canvas id="camera-overlay-canvas" class="absolute inset-0 w-full h-full object-cover scale-x-[-1] pointer-events-none z-10"></canvas>
+            
+            <!-- Dynamic webcam indicator tag -->
+            <div class="absolute top-3 left-3 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded text-xs font-mono flex items-center gap-2">
+              <span id="cam-status-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+              <span id="cam-status-text" class="text-slate-300 uppercase tracking-wider text-[10px]">Loading Module...</span>
+            </div>
+
+            <!-- Hand gesture visual state graphic indicator -->
+            <div class="absolute bottom-3 left-3 right-3 bg-slate-950/80 border border-slate-800/80 px-4 py-2.5 rounded-xl flex items-center justify-between backdrop-blur-md">
+              <div class="flex flex-col">
+                <span class="text-[10px] text-slate-500 font-mono tracking-wider">GESTURE DETECTED</span>
+                <span id="cam-gesture-val" class="font-bold text-sm text-slate-200">Searching...</span>
+              </div>
+              <div id="cam-gesture-badge" class="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest bg-slate-900 text-slate-500 uppercase">
+                Offline
+              </div>
+            </div>
+            
+            <div id="cam-permission-error" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center gap-4 hidden">
+              <span class="text-4xl text-rose-500">❌📷</span>
+              <h3 class="font-bold text-lg text-rose-500 leading-none">Webcam Access Denied / Blocked</h3>
+              <p class="text-xs text-slate-300 max-w-sm">
+                This usually happens because the browser's sandbox restricts cameras inside previews or iframes. 
+              </p>
+              <div class="flex flex-col gap-2 w-full max-w-xs">
+                <button id="btn-tab-launch-denied" class="w-full px-5 py-3 bg-gradient-to-r from-cyan-400 to-teal-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-cyan-500/20 hover:brightness-110 active:scale-95 cursor-pointer">
+                  🌐 Open App in New Tab (Bypasses Frame Blocks!)
+                </button>
+                <div class="text-slate-500 text-[10px] font-mono uppercase">or</div>
+                <button id="btn-force-mouse-fallback" class="w-full px-5 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl text-xs font-bold text-slate-300 transition-all cursor-pointer">
+                  🎮 Play Game in Mouse Fallback
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calibration Settings / Setup parameters list -->
+          <div class="flex flex-col gap-4">
+            <h3 class="font-bold text-lg text-emerald-400 font-sans border-b border-slate-800 pb-2">Simulator Diagnostics</h3>
+            
+            <div id="diagnostic-boxes" class="grid grid-cols-2 gap-3 font-mono text-xs">
+              <div class="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 text-[10px] block">FPS</span>
+                <span id="diag-fps" class="font-bold text-slate-300">0.00</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 text-[10px] block">CONFIDENCE</span>
+                <span id="diag-conf" class="font-bold text-slate-300">0.00</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 text-[10px] block">AIM SMOOTHING</span>
+                <span id="diag-smooth" class="font-bold text-slate-300">0.35 (Low/Lerp)</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950/60 border border-slate-800 col-span-2 flex items-center justify-between">
+                <div>
+                  <span class="text-slate-500 text-[10px] block">SHOOTING STATE</span>
+                  <span id="diag-shoot" class="font-bold text-orange-400">COOLDOWN</span>
+                </div>
+                <div id="trigger-state-visual" class="w-8 h-8 rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center text-lg">💡</div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-emerald-950/10 border border-emerald-500/20 text-xs flex gap-3 text-emerald-100">
+              <span class="text-lg">📢</span>
+              <p class="leading-relaxed">
+                Making the correct gun shape outputs a green aim crosshair. Raise your thumb upwards inside the camera scope to shoot. Ensure single-hand framing clearly fits inside the capture preview frame.
+              </p>
+            </div>
+
+            <div class="flex gap-3 justify-end mt-2">
+              <button id="btn-cam-back" class="px-5 py-3 border border-slate-800 hover:border-slate-700 bg-slate-950/80 rounded-xl text-sm font-bold text-slate-300 transition-all">
+                Cancel
+              </button>
+              <button id="btn-cam-proceed" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-slate-950 font-bold rounded-xl text-sm transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
+                <span>Proceed to Arena</span>
+                <svg class="w-4 h-4 fill-slate-950" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42 5.43 5.43H5v2z"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 4: Active Game Screen -->
+      <div id="screen-game" class="relative w-full h-full flex flex-col hidden select-none">
+        <!-- TOP HUD FLOATING LAYER -->
+        <header class="absolute top-4 left-4 right-4 z-20 pointer-events-none flex items-center justify-between flex-wrap gap-4 select-none">
+          <!-- LEFT STATS BOX -->
+          <div class="pointer-events-auto bg-navy-glass backdrop-blur-md rounded-2xl border border-slate-800 px-5 py-3 flex items-center gap-6 shadow-xl">
+            <div class="flex flex-col">
+              <span class="text-[10px] text-slate-500 font-mono leading-none tracking-widest uppercase">SCORE</span>
+              <span id="hud-score" class="text-3xl font-bold font-mono text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.2)]">0000</span>
+            </div>
+            <div class="w-px h-8 bg-slate-800"></div>
+            <div class="flex flex-col">
+              <span class="text-[10px] text-slate-500 font-mono leading-none tracking-widest uppercase">CLEANED</span>
+              <span id="hud-cleaned" class="text-xl font-bold font-mono text-cyan-400">0</span>
+            </div>
+          </div>
+
+          <!-- TIMER HUD PANEL (Center) -->
+          <div class="pointer-events-auto flex flex-col items-center">
+            <div id="hud-timer-container" class="bg-navy-glass backdrop-blur-md rounded-2xl border border-slate-800 px-8 py-3 shadow-xl flex flex-col items-center min-w-[140px] relative overflow-hidden">
+              <div id="timer-progress" class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-1000 w-full"></div>
+              <span class="text-[9px] text-slate-500 font-mono leading-none tracking-widest uppercase mb-0.5">ECO TIME</span>
+              <span id="hud-timer" class="text-3xl font-bold font-mono text-slate-100 tracking-wider">05:00</span>
+            </div>
+          </div>
+
+          <!-- RIGHT STATS PANEL (Combo with Shield/Acc) -->
+          <div class="pointer-events-auto bg-navy-glass backdrop-blur-md rounded-2xl border border-slate-800 px-5 py-3 flex items-center gap-6 shadow-xl">
+            <div class="flex flex-col items-center">
+              <span class="text-[10px] text-slate-500 font-mono leading-none tracking-widest uppercase mb-1">COMBO LEVEL</span>
+              <div class="flex items-center gap-1.5">
+                <span id="hud-combo" class="text-2xl font-black font-sans bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent leading-none drop-shadow-md">x0</span>
+                <div id="combo-meter-pip" class="h-3 w-16 bg-slate-800 rounded overflow-hidden p-[1px] border border-slate-700/40">
+                  <div id="combo-progressbar" class="h-full bg-amber-400 w-0 transition-all duration-300"></div>
+                </div>
+              </div>
+            </div>
+            <div class="w-px h-8 bg-slate-800"></div>
+            <div class="flex flex-col">
+              <span class="text-[10px] text-slate-500 font-mono leading-none tracking-widest uppercase">ACCURACY</span>
+              <span id="hud-accuracy" class="text-lg font-bold font-mono text-slate-300 text-right">100%</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- GAME CANVAS VIEWPORT -->
+        <div class="relative w-full h-full flex-grow rounded-3xl border border-slate-800 bg-[#05060f] overflow-hidden shadow-2xl">
+          <canvas id="game-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+          
+          <!-- Hidden Mini Video feed inside gameplay HUD corner -->
+          <div id="hud-video-container" class="absolute bottom-4 left-4 z-40 bg-navy-glass border border-slate-850 p-1.5 rounded-2xl flex items-center gap-3 backdrop-blur shadow-xl select-none transition-all duration-300 hover:scale-105 group">
+            <div class="relative w-28 aspect-video bg-black rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
+              <canvas id="hud-camera-canvas" class="w-full h-full object-cover scale-x-[-1]"></canvas>
+              <div class="absolute inset-0 bg-slate-900/10 hover:bg-slate-900/0 transition-all"></div>
+              <!-- Status indicators blinking -->
+              <div class="absolute top-1 right-1 px-1 py-[1.5px] rounded-md bg-slate-950/80 text-[7px] font-mono border border-slate-800 text-emerald-400 tracking-wider flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                LIVE
+              </div>
+            </div>
+            <div class="pr-3 text-left">
+              <span class="text-[8px] text-slate-500 font-mono tracking-wider block">GESTURE TARGET</span>
+              <span id="hud-gesture" class="font-bold text-xs text-slate-300 block leading-tight">Gesture Disabled</span>
+              <span id="hud-gesture-state" class="text-[9px] font-mono text-emerald-400">MOUSE CONTROL ACTIVE</span>
+            </div>
+          </div>
+
+          <!-- Bottom Utility Controls (Save nature prompt guidelines / Calibration toggles) -->
+          <div class="absolute bottom-4 right-4 z-40 flex items-center gap-3 select-none pointer-events-auto">
+            <!-- Calibrate Toggle -->
+            <button id="btn-toggle-hud" class="p-3 bg-navy-glass border border-slate-850 hover:bg-slate-900 rounded-xl text-slate-300 hover:text-white backdrop-blur shadow-lg flex items-center gap-1 text-xs font-semibold select-none cursor-pointer transition-all">
+              ⚙️ Calibrate
+            </button>
+            <button id="btn-game-pause" class="px-4 py-3 bg-navy-glass border border-slate-850 hover:bg-slate-900 text-slate-300 hover:text-white rounded-xl backdrop-blur shadow-lg flex items-center gap-2 text-xs font-bold font-sans cursor-pointer transition-all">
+              <span id="txt-pause">⏸️ Pause</span>
+            </button>
+            <button id="btn-game-restart" class="p-3 bg-rose-950/30 border border-rose-900/40 hover:bg-rose-900/40 text-rose-300 rounded-xl backdrop-blur shadow-lg text-xs cursor-pointer transition-all" title="Restart Game">
+              🔄 Reset
+            </button>
+          </div>
+
+          <!-- Center Large Educational Info Prompt Toast Notifications (Eco Fact notifications) -->
+          <div id="eco-toast" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-slate-950/90 border border-slate-800 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-xl transition-all duration-300 translate-y-12 opacity-0 select-none">
+            <span class="text-xl">💡</span>
+            <div>
+              <span class="text-[8px] text-emerald-400 font-mono tracking-widest block uppercase">ECO DEFENDER INSIGHT</span>
+              <p id="eco-toast-text" class="text-slate-300 text-xs mt-0.5 leading-snug">Avoid single-use plastic. Sort your dry waste to maximize local community recycling efficiencies.</p>
+            </div>
+          </div>
+
+          <!-- GIANT GESTURE PAUSE OVERLAY -->
+          <div id="hud-pause-overlay" class="absolute inset-0 z-50 bg-[#060814]/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center gap-6 hidden select-none">
+            <div class="w-16 h-16 rounded-full bg-cyan-950/40 border border-cyan-500/40 text-4xl flex items-center justify-center">
+              ⏸️
+            </div>
+            <div>
+              <h2 class="text-4xl font-extrabold text-cyan-400 tracking-tight leading-none mb-2">Simulation Paused</h2>
+              <p class="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
+                Click the continue button below to resume the environmental cleanup simulation.
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <button id="btn-paused-quit" class="px-5 py-2.5 rounded-lg border border-slate-800 hover:bg-slate-900 text-xs font-semibold text-slate-400 transition-all">
+                End Simulation
+              </button>
+              <button id="btn-paused-resume" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs transition-all shadow shadow-emerald-500/20">
+                Continue Gameplay
+              </button>
+            </div>
+          </div>
+
+          <!-- NATURE WARNING FLASH PANEL -->
+          <div id="nature-warning" class="absolute inset-0 pointer-events-none z-30 ring-inset ring-8 ring-rose-500/0 transition-all duration-200 select-none flex items-center justify-center">
+            <div id="nature-warning-txt" class="px-6 py-2.5 rounded-xl bg-rose-950 border border-rose-500/30 text-rose-400 font-bold text-lg select-none uppercase tracking-wider scale-90 opacity-0 transition-all duration-200 shadow-xl">
+              Don't Shoot Trees!
+            </div>
+          </div>
+
+          <!-- ECO SHIELD LAYER HUD (Double points visual shield flash) -->
+          <div id="shield-indicator" class="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none p-[1.5px] rounded-lg bg-cyan-400/0 transition-all duration-300 opacity-0 max-w-xs text-center border">
+            <!-- Dynamic dynamic alert -->
+          </div>
+
+          <!-- BOSS HEALTH BAR FLOATING AT TOP (Hidden by default) -->
+          <div id="boss-hud" class="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none bg-rose-950/80 border border-rose-500/20 px-6 py-4 rounded-2xl w-full max-w-xl shadow-2xl flex flex-col items-center gap-1.5 transition-all duration-300 opacity-0 scale-95 select-none">
+            <div class="flex items-center justify-between w-full">
+              <span id="boss-name" class="text-xs font-bold text-rose-400 font-mono tracking-widest uppercase">BOSS: WASTE MONSTER</span>
+              <span id="boss-hp-text" class="text-xs font-bold text-rose-300 font-mono">500 / 500 HP</span>
+            </div>
+            <div class="w-full h-3 bg-slate-950 border border-slate-850 rounded-full p-[1.5px] overflow-hidden">
+              <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-rose-600 via-orange-500 to-amber-400 w-full rounded-full transition-all duration-150"></div>
+            </div>
+            <span class="text-[9px] text-rose-400/80 font-mono tracking-wide">WEAPON DAMAGE AMPLIFIED: SHOOT THE MASS TO CLEAN!</span>
+          </div>
+
+          <!-- GESTURE HUD STATE OVERLAYS (No hand detected, alignment guide circles, calibrator) -->
+          <div id="hud-no-hand" class="absolute inset-x-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-300 flex flex-col items-center justify-center p-6 text-center select-none opacity-0">
+            <div class="px-5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm pointer-events-auto">
+              <div class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping"></div>
+              <div class="text-left text-xs">
+                <span class="font-bold text-slate-300 block">Show Your Hand Clearly</span>
+                <span class="text-slate-500 text-[10px] block font-mono">STAND 1.5 TO 2M IN CAMERA SIGHT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 5: Dynamic Result Game-Over Screen -->
+      <div id="screen-result" class="w-full max-w-2xl bg-navy-glass backdrop-blur-xl border border-slate-800 rounded-3xl p-8 md:p-12 shadow-2xl text-center flex flex-col items-center gap-6 hidden">
+        <div>
+          <span id="result-icon" class="text-4xl">🏆</span>
+          <h2 id="result-header" class="text-4xl font-extrabold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mt-2 tracking-tight">
+            Simulation Completed!
+          </h2>
+          <p id="result-subheader" class="text-slate-300 font-medium text-lg mt-1">You helped clean the planet!</p>
+        </div>
+
+        <!-- Rank display bento container -->
+        <div class="w-full bg-slate-900/60 border border-slate-850 rounded-2xl p-6 flex flex-col items-center relative overflow-hidden">
+          <div id="result-glow" class="absolute w-[200px] h-[200px] rounded-full bg-emerald-500/10 blur-[80px] -top-10 -left-10"></div>
+          <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase mb-1">YOUR ECO COGNITIVE RANK</span>
+          <h3 id="result-rank" class="text-2xl md:text-3xl font-black text-emerald-400 uppercase tracking-widest leading-none drop-shadow-md">
+            Earth Guardian
+          </h3>
+          <p id="result-rank-desc" class="text-xs text-slate-400 mt-2 max-w-md">An exceptional champion! You cleaned waste objects with expert tactical timing.</p>
+        </div>
+
+        <!-- Game Statistics Grid -->
+        <div class="grid grid-cols-2 gap-4 w-full text-left font-mono text-sm max-w-md">
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-850">
+            <span class="text-[9px] text-slate-500 tracking-wider block">FINAL SCORE</span>
+            <span id="res-score" class="text-xl font-bold text-emerald-400">0000</span>
+          </div>
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-850">
+            <span class="text-[9px] text-slate-500 tracking-wider block">CONVERTED WASTE</span>
+            <span id="res-cleaned" class="text-xl font-bold text-cyan-400">0 Items</span>
+          </div>
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-850">
+            <span class="text-[9px] text-slate-500 tracking-wider block">MAX COMBO</span>
+            <span id="res-combo" class="text-xl font-bold text-amber-400">x0 Series</span>
+          </div>
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-850">
+            <span class="text-[9px] text-slate-500 tracking-wider block">AIM ACCURACY</span>
+            <span id="res-accuracy" class="text-xl font-bold text-slate-200">100%</span>
+          </div>
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-850 col-span-2 flex justify-between items-center text-rose-400">
+            <div>
+              <span class="text-[9px] text-slate-500 tracking-wider block uppercase">Nature Penalties</span>
+              <span id="res-penalties" class="text-xl font-bold text-rose-500">0 Hits</span>
+            </div>
+            <span class="text-[10px] text-slate-400 italic">(-25pts & reset combos)</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md justify-center mt-2">
+          <button id="btn-result-replay" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold rounded-xl text-md hover:from-emerald-400 hover:to-teal-300 transition-all duration-300 active:scale-95 shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2">
+            Play Next Simulation
+          </button>
+          
+          <button id="btn-result-home" class="w-full sm:w-auto px-6 py-3.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-xl text-md hover:bg-slate-800 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center gap-2">
+            Exit to Menu
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CALIBRATION ADJUSTMENT CONFIGURATION SIDEBAR -->
+    <div id="calibration-sidebar" class="fixed top-0 right-0 h-full w-full max-w-[340px] z-[100] bg-slate-950/98 backdrop-blur-md border-l border-slate-800 p-6 flex flex-col gap-6 shadow-2xl transition-all duration-500 translate-x-full">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 select-none">
+        <h3 class="text-lg font-bold font-sans text-cyan-400 flex items-center gap-2">
+          ⚙️ Gesture Tuner
+        </h3>
+        <button id="btn-close-calibration" class="p-1 px-2 text-slate-400 hover:text-white text-sm bg-slate-900 border border-slate-800 rounded">
+          Close
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-6 flex-grow overflow-y-auto pr-2 select-none">
+        
+        <!-- Toggle Camera Mirror -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Mirror Output</span>
+            <span id="val-mirror" class="text-cyan-400 text-xs">ON</span>
+          </label>
+          <button id="btn-toggle-mirror" class="w-full py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg text-xs font-semibold text-slate-200 shadow-sm transition-all">
+            Toggle Camera Mirrored Sight
+          </button>
+        </div>
+
+        <!-- Cooldown Threshold -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Shoot Cooldown</span>
+            <span id="val-cooldown" class="text-cyan-400">250ms</span>
+          </label>
+          <input id="slider-cooldown" type="range" min="100" max="600" step="50" value="250" class="w-full accent-cyan-400 h-1 rounded bg-slate-800 cursor-pointer">
+          <span class="text-[9px] text-slate-500 font-mono leading-relaxed">Time gap required between individual thumb shots to prevent spam triggers on major screens.</span>
+        </div>
+
+        <!-- Target Size Modifier -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Global Target Size</span>
+            <span id="val-size" class="text-cyan-400">Large</span>
+          </label>
+          <input id="slider-size" type="range" min="60" max="130" step="10" value="90" class="w-full accent-cyan-400 h-1 rounded bg-slate-800 cursor-pointer">
+          <span class="text-[9px] text-slate-500 font-mono leading-relaxed">Adjust pixel diameter scale of moving rubbish to suit small phone sights or enormous 120" mall panels.</span>
+        </div>
+
+        <!-- Lerp Aim Smoothing -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Aim Smoothing</span>
+            <span id="val-smoothing" class="text-cyan-400">0.35</span>
+          </label>
+          <input id="slider-smoothing" type="range" min="0.05" max="0.95" step="0.05" value="0.35" class="w-full accent-cyan-400 h-1 rounded bg-slate-800 cursor-pointer">
+          <span class="text-[9px] text-slate-500 font-mono leading-relaxed">Low values make crosshair movement buttery-smooth but add slight lag. High values make it hyper-responsive but jittery.</span>
+        </div>
+
+        <!-- Tracking Sensitivity -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Tracking Sensitivity</span>
+            <span id="val-sensitivity" class="text-cyan-400">0.70x</span>
+          </label>
+          <input id="slider-sensitivity" type="range" min="0.30" max="1.80" step="0.05" value="0.70" class="w-full accent-cyan-400 h-1 rounded bg-slate-800 cursor-pointer">
+          <span class="text-[9px] text-slate-500 font-mono leading-relaxed">Adjusts how far the crosshair moves relative to your hand. Lower values (e.g. 0.5x - 0.7x) reduce exaggeration and make it extremely smooth and stable.</span>
+        </div>
+
+        <!-- Aiming Confidence -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-slate-400 font-bold tracking-wider uppercase font-mono flex justify-between">
+            <span>Webcam Contrast / Gain</span>
+            <span id="val-gain" class="text-cyan-400">Default (Off)</span>
+          </label>
+          <button id="btn-toggle-filter" class="w-full py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg text-xs font-semibold text-slate-200 shadow-sm transition-all">
+            Enable Night Enhancement Overlay
+          </button>
+        </div>
+
+        <div class="p-4 rounded-xl bg-orange-950/20 border border-orange-500/20 text-[10px] text-orange-200/90 leading-normal font-sans">
+          💡 Clicking calibration resets coordinates instantly. Press standard keyboard shortcut <kbd class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 font-mono font-bold text-[9px]">Space</kbd> as backup manual shoot or trigger reload shield anytime!
+        </div>
+
+      </div>
+
+      <div class="border-t border-slate-800 pt-4 flex flex-col gap-2 select-none">
+        <button id="btn-reset-calibration" class="w-full py-2 bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">
+          Restore Factory Defaults
+        </button>
+        <button id="btn-save-calibration" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition-colors shadow">
+          Apply Settings
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

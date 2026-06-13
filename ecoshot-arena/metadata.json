@@ -1,0 +1,6 @@
+{
+  "name": "EcoShot Arena",
+  "description": "An interactive gesture-controlled environmental shooting game using MediaPipe Hands and Canvas API to promote pollution and waste awareness on public screens.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

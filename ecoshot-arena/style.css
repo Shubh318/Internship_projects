@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* EcoShot Arena — Custom Display Styles */
+
+:root {
+  --neon-green: #10b981;
+  --neon-cyan: #06b6d4;
+  --neon-warning: #ef4444;
+  --neon-gold: #f59e0b;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  background-color: #050714;
+}
+
+/* Glassmorphic Panel HUD styling */
+.glass-panel {
+  background: rgba(10, 15, 36, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Base style for hiding screens */
+.hidden {
+  display: none !important;
+}
+
+/* Custom glow effects for game screens */
+.neon-glow-green {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.neon-glow-cyan {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+.neon-glow-warning {
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Cursor control over Canvas gameplay viewport */
+#game-canvas {
+  background-color: #03040b;
+  display: block;
+}
+
+/* Customize range input slider thumbs for high precision and accessibility */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+  cursor: pointer;
+  margin-top: -6px; /* center thumb */
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: #1e293b;
+  border-radius: 2px;
+}
+
+/* Custom Scrollbar Styles for standard panels */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Simple animation keyframes of space and environmental elements */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.25;
+  }
+}
+
+#bg-glow {
+  animation: pulseGlow 12s infinite ease-in-out;
+}
+
+#bg-glow-2 {
+  animation: pulseGlow 8s infinite ease-in-out;
+}
+
+/* Simple visual trigger status badge animations */
+.trigger-active {
+  background-color: var(--neon-green) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px var(--neon-green);
+}
